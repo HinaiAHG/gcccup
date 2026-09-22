@@ -448,11 +448,9 @@ function predLabel(p){
   return p.winner;
 }
 
-/* ---------------- lock logic ---------------- */
-const earliestKickoff = () => { const up=MATCHES.filter(m=>!m.locked); return Math.min(...(up.length?up:MATCHES).map(kickoffMs)); };
-const setLockMs = () => earliestKickoff() - LOCK_MINUTES_BEFORE*60000;
-const isLocked = m => m.locked === true || Date.now() >= setLockMs();
-const setIsLocked = () => Date.now() >= setLockMs();
+/* ---------------- lock logic — per game ---------------- */
+const gameLockMs = m => kickoffMs(m) - LOCK_MINUTES_BEFORE * 60000;
+const isLocked = m => m.locked === true || Date.now() >= gameLockMs(m);
 
 /* ---------------- render matches ---------------- */
 function stageOrder(s){return ["group","semi","third","final"].indexOf(s)}
@@ -547,7 +545,7 @@ function renderMatches(){
       ${(!p.pens && (p.hs==null||p.hs==="") && (p.as==null||p.as===""))?`<div class="score-hint">Enter score</div>`:""}
       <button type="button" class="penbtn ${p.pens?"on":""}" data-pen>${p.pens?"⚽ Penalties":"Predict penalties"}</button>`:""}
       <div class="countdown ${locked?"locked":""}" data-cd="${m.id}">
-        <span class="dot"></span><span class="t">${locked?"Locked":fmtLeft(setLockMs()-Date.now())}</span>
+        <span class="dot"></span><span class="t">${locked?"Locked":fmtLeft(gameLockMs(m)-Date.now())}</span>
         <span class="ko">🕓 ${omanTime(m)} (Oman)</span>
       </div>
       <div class="reveal ${locked?"on":""}"><h4>Everyone's picks</h4><div class="predlist"></div></div>
@@ -612,18 +610,22 @@ setInterval(()=>{
   document.querySelectorAll("[data-cd]").forEach(el=>{
     const m=MATCHES.find(x=>x.id===el.dataset.cd); if(!m) return;
     if(isLocked(m)){ el.querySelector(".t").textContent="Locked"; el.classList.add("locked"); return; }
-    const left=setLockMs()-Date.now();
+    const left=gameLockMs(m)-Date.now();
     if(left<=0 && !el.classList.contains("locked")){ renderMatches(); return; }
     if(left>0) el.querySelector(".t").textContent=fmtLeft(left);
   });
 },1000);
 setInterval(()=>{
-  const left = setLockMs() - Date.now();
   const el = $("#liveclock");
-  if(left>0){
-    el.innerHTML = `Predictions lock in <b style="color:var(--green)">${fmtLeft(left).replace("Locks in ","")}</b> · then everyone’s picks are revealed`;
+  const next = [...MATCHES].filter(m=>!m.locked && !isLocked(m)).sort((a,b)=>kickoffMs(a)-kickoffMs(b))[0];
+  if(next){
+    const left = gameLockMs(next) - Date.now();
+    if(left > 0){
+      el.innerHTML = `Next lock (<b>${next.home} v ${next.away}</b>) in <b style="color:var(--green)">${fmtLeft(left).replace("Locks in ","")}</b>`;
+    }
   } else {
-    el.innerHTML = `<b style="color:var(--magenta)">Predictions locked</b> · all picks are now visible`;
+    const anyOpen = MATCHES.some(m=>!isLocked(m));
+    el.innerHTML = anyOpen ? "" : `<b style="color:var(--magenta)">All predictions locked</b>`;
   }
 },1000);
 
