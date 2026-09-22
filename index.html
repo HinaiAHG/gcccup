@@ -321,7 +321,8 @@
 
   <div class="idbar">
     <label for="nameInput">Your name</label>
-    <input id="nameInput" type="text" placeholder="Enter your name" autocomplete="name" spellcheck="false" />
+    <input id="nameInput" type="text" placeholder="Enter your name" list="nameList" autocomplete="off" spellcheck="false" />
+    <datalist id="nameList"></datalist>
     <input id="username" type="hidden" />
   </div>
 
@@ -756,8 +757,12 @@ function applyLiveResults(){
 /* ---------------- name selector ---------------- */
 function populateNames(){
   const saved=localStorage.getItem("gcc_name");
-  const inp=$("#username"), ni=$("#nameInput");
+  const inp=$("#username"), ni=$("#nameInput"), dl=$("#nameList");
   if(saved){ inp.value=saved; if(ni) ni.value=saved; }
+  if(dl){
+    const names=[...new Set(allPreds.map(p=>p.username))].sort((a,b)=>a.localeCompare(b));
+    dl.innerHTML=names.map(n=>`<option value="${n.replace(/"/g,"&quot;")}"></option>`).join("");
+  }
 }
 function onNameInput(){
   const ni=$("#nameInput"), inp=$("#username");
