@@ -661,7 +661,7 @@ async function savePicks(){
   if(!rows.length){ toast("Make at least one pick on an open match"); return; }
 
   $("#saveBtn").disabled=true;
-  const { error } = await sb.from("gcc_predictions")
+  const { error } = await sb.from("predictions")
         .upsert(rows,{onConflict:"username,match_id"});
   $("#saveBtn").disabled=false;
   if(error){ toast("Save failed — check console"); console.error(error); return; }
@@ -685,8 +685,8 @@ async function loadData(){
   if(configured){
     try{
       const [preds, res] = await Promise.all([
-        fetchAllRows("gcc_predictions"),
-        fetchAllRows("gcc_results")
+        fetchAllRows("predictions"),
+        fetchAllRows("results")
       ]);
       allPreds = preds||[];
       results = {};
@@ -943,7 +943,7 @@ function renderAdmin(){
       const penEl=card.querySelector("[data-pen-win]"), penWin=penEl?penEl.value:"";
       let H=+hs, A=+as;
       if(penWin==="home") H=+hs+100; else if(penWin==="away") A=+as+100;
-      const { error } = await sb.from("gcc_results")
+      const { error } = await sb.from("results")
         .upsert([{match_id:id,home_score:H,away_score:A}],{onConflict:"match_id"});
       if(error){ toast("Failed"); console.error(error); return; }
       toast("Result saved ✓"); await loadData(); renderAdmin(); renderBoard(); renderGroups();
