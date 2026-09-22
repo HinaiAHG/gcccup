@@ -320,11 +320,9 @@
   </div>
 
   <div class="idbar">
-    <label>Your name<span class="spinner" id="nameSpin" style="display:none"></span></label>
-    <select id="nameSelect">
-      <option value="" disabled selected>Select your name</option>
-    </select>
-    <input id="username" type="hidden" autocomplete="name" />
+    <label for="nameInput">Your name</label>
+    <input id="nameInput" type="text" placeholder="Enter your name" autocomplete="name" spellcheck="false" />
+    <input id="username" type="hidden" />
   </div>
 
   <div class="tabs">
@@ -757,24 +755,15 @@ function applyLiveResults(){
 
 /* ---------------- name selector ---------------- */
 function populateNames(){
-  const sel=$("#nameSelect"); if(!sel) return;
-  const names=[...new Set(allPreds.map(p=>p.username))].sort((a,b)=>a.localeCompare(b));
   const saved=localStorage.getItem("gcc_name");
-  const loadingNames=(!dataReady && !names.length);
-  const placeholder=loadingNames?"Loading names…":"Select your name";
-  sel.innerHTML =
-    '<option value="" disabled'+(saved?'':' selected')+'>'+placeholder+'</option>' +
-    names.map(n=>`<option value="${n.replace(/"/g,"&quot;")}"${n===saved?" selected":""}>${n}</option>`).join("");
-  const spin=$("#nameSpin"); if(spin) spin.style.display=loadingNames?"inline-block":"none";
-  const inp=$("#username");
-  if(saved){ inp.value=saved; }
+  const inp=$("#username"), ni=$("#nameInput");
+  if(saved){ inp.value=saved; if(ni) ni.value=saved; }
 }
-function onNameSelect(){
-  const sel=$("#nameSelect"), inp=$("#username");
-  if(sel.value){
-    inp.value=sel.value;
-    localStorage.setItem("gcc_name", sel.value);
-  }
+function onNameInput(){
+  const ni=$("#nameInput"), inp=$("#username");
+  const v=ni.value.trim();
+  inp.value=v;
+  if(v) localStorage.setItem("gcc_name",v);
 }
 
 /* ---------------- who has predicted ---------------- */
@@ -1017,7 +1006,8 @@ function hydrateFromCache(){
 }
 
 /* ---------------- name input handling ---------------- */
-$("#nameSelect").addEventListener("change", onNameSelect);
+$("#nameInput").addEventListener("input", onNameInput);
+$("#nameInput").addEventListener("change", onNameInput);
 $("#username").addEventListener("input",e=>localStorage.setItem("gcc_name",e.target.value.trim()));
 
 /* ---------------- live score polling ---------------- */
