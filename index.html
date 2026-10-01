@@ -328,7 +328,6 @@
 
   <div class="tabs">
     <div class="tab active" data-view="play">Predict</div>
-    <div class="tab" data-view="groups">Groups</div>
     <div class="tab" data-view="board">Leaderboard</div>
     <div class="tab" data-view="history">History</div>
   </div>
@@ -336,11 +335,6 @@
   <!-- PLAY VIEW -->
   <div id="playView">
     <div id="matches"></div>
-  </div>
-
-  <!-- GROUPS VIEW -->
-  <div id="groupsView" style="display:none">
-    <div id="groups"><div class="empty">Loading group standings…</div></div>
   </div>
 
   <!-- BOARD VIEW -->
@@ -972,13 +966,11 @@ $("#uClose").addEventListener("click",()=>$("#userModal").classList.remove("on")
 /* ---------------- view switching ---------------- */
 function show(view){
   $("#playView").style.display = view==="play"?"block":"none";
-  $("#groupsView").style.display = view==="groups"?"block":"none";
   $("#boardView").style.display = view==="board"?"block":"none";
   $("#adminView").style.display = view==="admin"?"block":"none";
   $("#historyView").style.display = view==="history"?"block":"none";
   $("#saveBar").style.display = view==="play"?"block":"none";
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===view));
-  if(view==="groups") renderGroups();
   if(view==="board") renderBoard();
   if(view==="history") renderHistory();
 }
