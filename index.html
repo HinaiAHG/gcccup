@@ -82,15 +82,16 @@
       home:"UAE",          away:"Qatar",         homeFlag:"🇦🇪", awayFlag:"🇶🇦",
       kickoff:"2026-09-30T17:30:00+00:00" },
 
-    // ===== Semi-finals (add teams once group stage is done) =====
-    // { id:"sf1", apiId:XXXX, stage:"semi", locked:false, home:"TBD", away:"TBD", ... },
-    // { id:"sf2", apiId:XXXX, stage:"semi", locked:false, home:"TBD", away:"TBD", ... },
-
-    // ===== 3rd place =====
-    // { id:"tp",  apiId:XXXX, stage:"third", locked:false, home:"TBD", away:"TBD", ... },
+    // ===== Semi-finals =====
+    { id:"gcc_sf1", apiId:null, stage:"semi", locked:false,
+      home:"Saudi Arabia", away:"Qatar",  homeFlag:"🇸🇦", awayFlag:"🇶🇦",
+      kickoff:"2026-10-03T15:00:00+00:00" },
+    { id:"gcc_sf2", apiId:null, stage:"semi", locked:false,
+      home:"UAE",          away:"Oman",   homeFlag:"🇦🇪", awayFlag:"🇴🇲",
+      kickoff:"2026-10-03T18:30:00+00:00" },
 
     // ===== Final =====
-    // { id:"fin", apiId:XXXX, stage:"final", locked:false, home:"TBD", away:"TBD", ... },
+    // { id:"gcc_fin", apiId:null, stage:"final", locked:false, home:"TBD", away:"TBD", homeFlag:"", awayFlag:"", kickoff:"2026-10-06T18:00:00+00:00" },
   ];
 </script>
 
@@ -320,9 +321,8 @@
   </div>
 
   <div class="idbar">
-    <label for="nameInput">Your name</label>
-    <input id="nameInput" type="text" placeholder="Enter your name" list="nameList" autocomplete="off" spellcheck="false" />
-    <datalist id="nameList"></datalist>
+    <label for="nameSelect">Your name</label>
+    <select id="nameSelect"><option value="">-- Select your name --</option></select>
     <input id="username" type="hidden" />
   </div>
 
@@ -631,7 +631,7 @@ setInterval(()=>{
 /* ---------------- save predictions ---------------- */
 async function savePicks(){
   const name=$("#username").value.trim();
-  if(!name){ toast("Enter your name first"); $("#username").focus(); return; }
+  if(!name){ toast("Select your name first"); $("#nameSelect").focus(); return; }
   if(!configured){ toast("Connect the database first"); return; }
 
   const rows=[];
@@ -757,16 +757,16 @@ function applyLiveResults(){
 /* ---------------- name selector ---------------- */
 function populateNames(){
   const saved=localStorage.getItem("gcc_name");
-  const inp=$("#username"), ni=$("#nameInput"), dl=$("#nameList");
-  if(saved){ inp.value=saved; if(ni) ni.value=saved; }
-  if(dl){
-    const names=[...new Set(allPreds.map(p=>p.username))].sort((a,b)=>a.localeCompare(b));
-    dl.innerHTML=names.map(n=>`<option value="${n.replace(/"/g,"&quot;")}"></option>`).join("");
-  }
+  const inp=$("#username"), sel=$("#nameSelect");
+  if(!sel) return;
+  const names=[...new Set(allPreds.map(p=>p.username))].sort((a,b)=>a.localeCompare(b));
+  sel.innerHTML=`<option value="">-- Select your name --</option>`
+    +names.map(n=>`<option value="${n.replace(/"/g,"&quot;")}">${escHtml(n)}</option>`).join("");
+  if(saved && names.includes(saved)){ sel.value=saved; inp.value=saved; }
 }
-function onNameInput(){
-  const ni=$("#nameInput"), inp=$("#username");
-  const v=ni.value.trim();
+function onNameChange(){
+  const sel=$("#nameSelect"), inp=$("#username");
+  const v=sel.value;
   inp.value=v;
   if(v) localStorage.setItem("gcc_name",v);
 }
@@ -1011,9 +1011,7 @@ function hydrateFromCache(){
 }
 
 /* ---------------- name input handling ---------------- */
-$("#nameInput").addEventListener("input", onNameInput);
-$("#nameInput").addEventListener("change", onNameInput);
-$("#username").addEventListener("input",e=>localStorage.setItem("gcc_name",e.target.value.trim()));
+$("#nameSelect").addEventListener("change", onNameChange);
 
 /* ---------------- live score polling ---------------- */
 function liveSig(){
